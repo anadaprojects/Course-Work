@@ -1,8 +1,10 @@
 import sys
-from algorithms.greedy_algorithm import greedy_algorithm
+
 from algorithms.genetic_algorithm import genetic_algorithm
 from utils.task_generator import generate_task
 from utils.task_csv_reader import read_task_from_csv
+from algorithms.greedy_algorithm import greedy_algorithm, print_greedy_result, print_initial_task_data, display_greedy_table
+
 from utils.experiments_runner import (
     run_experiment_iterations,
     run_experiment_population,
@@ -11,12 +13,14 @@ from utils.experiments_runner import (
 
 def print_menu():
     print("\nОберіть одну з опцій:")
-    print("1 – Згенерувати розклад за допомогою жадібного алгоритму (A1)")
-    print("2 – Згенерувати розклад за допомогою генетичного алгоритму без локального покращення (A2)")
-    print("3 – Провести експеримент для визначення оптимальної кількості послідовних ітерацій (експеримент 1)")
-    print("4 – Провести експеримент для дослідження впливу розміру популяції (експеримент 2)")
-    print("5 – Провести експеримент для дослідження впливу розмірності задачі (експеримент 3)")
+    print("1 – Сформувати білети за допомогою жадібного алгоритму")
+    print("2 – Сформувати білети за допомогою генетичного алгоритму ")
+    print("3 – Ввести вручну")
+    print("4 – Експеримент 1: вплив параметра K (ітерації без покращення)")
+    print("5 – Експеримент 2: вплив розміру популяції (P)")
+    print("6 – Експеримент 3: вплив кількості білетів (n)")
     print("0 – Вийти")
+
 
 def get_task_from_user():
     print("\nОберіть джерело задачі:")
@@ -27,17 +31,18 @@ def get_task_from_user():
         try:
             from utils.task_csv_reader import read_task_from_csv
             task = read_task_from_csv()
-            print("✅ Дані зчитано з файлу.\n")
+            print("Дані зчитано з файлу.\n")
         except Exception as e:
-            print("❌ Помилка при зчитуванні:", e)
-            print("⚠️  Генеруємо задачу автоматично.")
+            print("Помилка при зчитуванні:", e)
+            print("Генеруємо задачу автоматично.")
             from utils.task_generator import generate_task
             task = generate_task()
     else:
         from utils.task_generator import generate_task
         task = generate_task()
-        print("✅ Задачу згенеровано автоматично.\n")
+        print("Задачу згенеровано автоматично.\n")
     return task
+
 
 
 def main():
@@ -47,8 +52,13 @@ def main():
 
         if choice == "1":
             task = get_task_from_user()
-            result = greedy_algorithm(task)
-            print("Розклад (жадібний алгоритм):", result)
+            if task:
+                print_initial_task_data(task)
+                result = greedy_algorithm(task)
+                print_greedy_result(result)
+                display_greedy_table(result)
+ 
+           
 
         elif choice == "2":
             task = get_task_from_user()

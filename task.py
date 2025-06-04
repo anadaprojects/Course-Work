@@ -27,3 +27,16 @@ def read_tasks_from_csv(path):
         for row in reader:
             tasks.append(Task(row['id'], int(row['income']), int(row['duration']), int(row['deadline'])))
     return tasks
+
+
+def input_question_manually():
+    N = int(input("Кількість тем: "))
+    ni = int(input("Кількість питань на тему: "))
+    data = []
+    for i in range(N):
+        print(f"Введіть {ni} складностей для теми {i+1} через пробіл:")
+        row = list(map(float, input().strip().split()))
+        if len(row) != ni:
+            raise ValueError("Неправильна кількість значень.")
+        data.append(row)
+    return {"N": N, "ni": ni, "data": data}
