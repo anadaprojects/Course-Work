@@ -40,7 +40,8 @@ def mutate(tickets, data, mutation_rate):
     return tickets
 
 
-def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2, patience=15):
+def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2, crossover_prob=0.8, patience=15):
+
     data = task["data"]
     N = len(data)
     min_b = min(len(t) for t in data)
@@ -71,7 +72,11 @@ def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2,
         for _ in range(pop_size):
             parent1 = copy.deepcopy(random.choice(evaluated[:5])[1])
             parent2 = copy.deepcopy(random.choice(evaluated[:5])[1])
-            child = crossover(parent1, parent2)
+            if random.random() < crossover_prob:
+             child = crossover(parent1, parent2)
+            else:
+              child = copy.deepcopy(parent1)
+
             child = mutate(child, data, mutation_rate)
             new_population.append(child)
         population = new_population

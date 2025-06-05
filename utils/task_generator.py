@@ -31,3 +31,25 @@ def generate_task():
         "ni": ni,
         "data": data
     }
+def generate_custom_task(n=5, ni=5, N=5, c_avg=10, delta_c=3):
+    """
+    Генерує індивідуальну задачу P(n, ni, N, c_avg, delta_c), де:
+      n — кількість білетів (довжина списку в кожній темі),
+      ni — кількість питань у білеті (ігнорується в генерації, але використовується в алгоритмах),
+      N — кількість тем,
+      c_avg — середня складність питання,
+      delta_c — варіація складності.
+    """
+    data = []
+    min_c = max(1, c_avg - delta_c)
+    max_c = min(15, c_avg + delta_c)
+
+    for _ in range(N):
+        theme = [random.randint(min_c, max_c) for _ in range(n)]
+        data.append(theme)
+
+    return {
+        "N": N,
+        "data": data,
+        "ni": ni
+    }
