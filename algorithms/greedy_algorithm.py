@@ -1,54 +1,31 @@
 from tabulate import tabulate
 
 def greedy_algorithm(task):
-    """
-    Жадібний алгоритм для формування білетів із приблизно рівною складністю.
-
-    Вхід:
-        task — словник з ключами:
-            - N: кількість тем
-            - ni: кількість питань на тему (однакова для всіх тем)
-            - data: список списків складностей питань [N][ni]
-
-    Вихід:
-        - xikb: матриця вибору питань (бінарна)
-        - Cmax: максимальна складність серед білетів
-        - Cmin: мінімальна складність серед білетів
-        - Z: цільова функція (Cmax - Cmin)
-    """
     N = task["N"]
-    ni = task["ni"]
     data = task["data"]
-    n = ni  # кількість білетів дорівнює кількості питань на тему
+    ni_list = [len(t) for t in data]
+    n = min(ni_list)  # кількість білетів = мінімальна кількість питань серед тем
 
-    # Ініціалізація білетів і складностей
     tickets = [[] for _ in range(n)]
     ticket_scores = [0] * n
+    xikb = [[[0 for _ in range(n)] for _ in range(len(data[i]))] for i in range(N)]
 
-    # Бінарна матриця вибору xikb[i][k][b] = 1, якщо питання k з теми i у білеті b
-    xikb = [[[0 for _ in range(n)] for _ in range(ni)] for _ in range(N)]
-
-    for i in range(N):  # для кожної теми
-        # Відсортувати питання за спаданням складності
-        questions = sorted([(k, data[i][k]) for k in range(ni)], key=lambda x: -x[1])
-
+    for i in range(N):
+        questions = sorted([(k, data[i][k]) for k in range(len(data[i]))], key=lambda x: -x[1])
         used = set()
         for k, cik in questions:
-            # Знайти білет, у якому ще немає питання з теми i, і який має найменшу складність
             candidate = None
             min_score = float("inf")
             for b in range(n):
                 if len(tickets[b]) == i and ticket_scores[b] < min_score:
                     candidate = b
                     min_score = ticket_scores[b]
-
             if candidate is not None:
                 tickets[candidate].append((i, k, cik))
                 ticket_scores[candidate] += cik
                 xikb[i][k][candidate] = 1
                 used.add(k)
-
-            if len(used) == ni:
+            if len(used) == len(data[i]):
                 break
 
     Cmax = max(ticket_scores)
@@ -65,25 +42,17 @@ def greedy_algorithm(task):
     }
 
 def print_initial_task_data(task):
-    """
-    Виводить початкові дані задачі: кількість тем, питань і складності.
-    """
     print("\n========== ПОЧАТКОВІ ДАНІ ЗАДАЧІ ==========\n")
     print(f"Кількість тем: {task['N']}")
-    print(f"Кількість питань у кожній темі: {task['ni']}")
+    ni_list = [len(t) for t in task["data"]]
+    print("Кількість питань у кожній темі:", ", ".join(f"Тема {i+1}: {n}" for i, n in enumerate(ni_list)))
     print("\nСкладності питань по темах:")
-
     for i, topic in enumerate(task["data"], start=1):
         difficulties = ", ".join(str(x) for x in topic)
         print(f"  Тема {i}: {difficulties}")
-    
     print("\n===========================================\n")
 
-
 def display_greedy_table(result):
-    """
-    Виводить результат жадібного алгоритму у вигляді таблиці.
-    """
     data = []
     for i, ticket in enumerate(result["tickets"], start=1):
         for (topic, question, difficulty) in ticket:
@@ -98,20 +67,32 @@ def display_greedy_table(result):
     print("\n" + tabulate(data, headers=headers, tablefmt="fancy_grid"))
 
 def print_greedy_result(result):
-    """
-    Форматований вивід результатів жадібного алгоритму.
-    """
     print("\n================== ЖАДІБНИЙ АЛГОРИТМ ==================\n")
     print("Розподіл питань по білетах:\n")
-
     for i, ticket in enumerate(result["tickets"], start=1):
         print(f"Білет B{i}:")
         for (topic, question, difficulty) in ticket:
             print(f"  - Тема T{topic + 1}, Питання №{question + 1}, Складність: {difficulty}")
         print(f"  >> Загальна складність: {result['scores'][i - 1]}\n")
-
     print("--------------- Метрики -----------------")
     print(f"Максимальна складність (Cmax): {result['Cmax']}")
     print(f"Мінімальна складність (Cmin): {result['Cmin']}")
     print(f"Різниця Z = Cmax - Cmin:        {result['Z']}")
     print("=========================================\n")
+
+
+import matplotlib.pyplot as plt
+
+def display_greedy_chart(result):
+    plt.figure(figsize=(10, 5))
+    x_labels = [f"B{i+1}" for i in range(len(result["scores"]))]
+    plt.bar(x_labels, result["scores"])
+    plt.axhline(result["Cmax"], color='red', linestyle='--', label='Cmax')
+    plt.axhline(result["Cmin"], color='green', linestyle='--', label='Cmin')
+    plt.title("Складність кожного білета (Жадібний алгоритм)")
+    plt.xlabel("Білети")
+    plt.ylabel("Сумарна складність")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.tight_layout()
+    plt.show()

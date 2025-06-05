@@ -5,53 +5,59 @@ def evaluate_solution(tickets):
     scores = [sum(q[2] for q in ticket) for ticket in tickets]
     return max(scores) - min(scores), scores
 
-def generate_initial_population(data, N, ni, pop_size):
+def generate_initial_population(data, pop_size):
+    N = len(data)
+    min_b = min(len(t) for t in data)
     population = []
     for _ in range(pop_size):
-        tickets = [[] for _ in range(ni)]
-        for i in range(N):
-            indices = list(range(ni))
+        tickets = [[] for _ in range(min_b)]
+        for i, topic in enumerate(data):
+            indices = list(range(len(topic)))
             random.shuffle(indices)
-            for b in range(ni):
-                difficulty = data[i][indices[b]]
-                tickets[b].append((i, indices[b], difficulty))
+            for b in range(min_b):
+                k = indices[b]
+                difficulty = topic[k]
+                tickets[b].append((i, k, difficulty))
         population.append(tickets)
     return population
 
 def crossover(parent1, parent2):
-    return copy.deepcopy(random.choice([parent1, parent2]))
+    child = []
+    for t1, t2 in zip(parent1, parent2):
+        split = random.randint(1, len(t1)-1)
+        child.append(t1[:split] + t2[split:])
+    return child
 
-def mutate(tickets, data, N, ni, mutation_rate):
+def mutate(tickets, data, mutation_rate):
+    N = len(data)
     for ticket in tickets:
         if random.random() < mutation_rate:
             i = random.randint(0, N - 1)
-            new_k = random.randint(0, ni - 1)
-            ticket[i] = (i, new_k, data[i][new_k])
+            if len(data[i]) > 1:
+                new_k = random.randint(0, len(data[i]) - 1)
+                ticket[i] = (i, new_k, data[i][new_k])
     return tickets
 
-def genetic_algorithm(task, pop_size=10, max_generations=100, mutation_rate=0.1, patience=10):
-    N = task["N"]
-    ni = task["ni"]
+def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2, patience=15):
     data = task["data"]
+    N = len(data)
+    min_b = min(len(t) for t in data)
 
-    population = generate_initial_population(data, N, ni, pop_size)
+    population = generate_initial_population(data, pop_size)
     best = None
     best_score = float('inf')
     best_scores = []
     generations_no_improve = 0
 
-    for gen in range(max_generations):
-        evaluated = []
-        for t in population:
-            diff, scores = evaluate_solution(t)
-            evaluated.append((diff, t, scores))
+    for _ in range(max_generations):
+        evaluated = [(evaluate_solution(t), t) for t in population]
+        evaluated.sort(key=lambda x: x[0][0])
 
-        evaluated.sort(key=lambda x: x[0])
-
-        if evaluated[0][0] < best_score:
-            best_score = evaluated[0][0]
-            best = evaluated[0][1]
-            best_scores = evaluated[0][2]
+        top_score, top_tickets = evaluated[0][0][0], evaluated[0][1]
+        if top_score < best_score:
+            best_score = top_score
+            best = top_tickets
+            best_scores = evaluate_solution(top_tickets)[1]
             generations_no_improve = 0
         else:
             generations_no_improve += 1
@@ -61,10 +67,10 @@ def genetic_algorithm(task, pop_size=10, max_generations=100, mutation_rate=0.1,
 
         new_population = []
         for _ in range(pop_size):
-            parent1 = random.choice(population)
-            parent2 = random.choice(population)
+            parent1 = copy.deepcopy(random.choice(evaluated[:5])[1])
+            parent2 = copy.deepcopy(random.choice(evaluated[:5])[1])
             child = crossover(parent1, parent2)
-            child = mutate(child, data, N, ni, mutation_rate)
+            child = mutate(child, data, mutation_rate)
             new_population.append(child)
         population = new_population
 
@@ -75,3 +81,38 @@ def genetic_algorithm(task, pop_size=10, max_generations=100, mutation_rate=0.1,
         "min": min(best_scores),
         "diff": best_score
     }
+
+
+import matplotlib.pyplot as plt
+
+def display_genetic_result(result):
+    """
+    Виводить таблицю та графік результатів генетичного алгоритму.
+    """
+    print("\n================== ГЕНЕТИЧНИЙ АЛГОРИТМ ==================\n")
+    print("Розподіл питань по білетах:\n")
+
+    for i, ticket in enumerate(result["tickets"], start=1):
+        print(f"Білет B{i}:")
+        for (topic, question, difficulty) in ticket:
+            print(f"  - Тема T{topic + 1}, Питання №{question + 1}, Складність: {difficulty}")
+        print(f"  >> Загальна складність: {result['scores'][i - 1]}\n")
+
+    print("--------------- Метрики -----------------")
+    print(f"Максимальна складність (Cmax): {result['max']}")
+    print(f"Мінімальна складність (Cmin): {result['min']}")
+    print(f"Різниця Z = Cmax - Cmin:        {result['diff']}")
+    print("=========================================\n")
+
+    # Побудова графіка
+    plt.figure(figsize=(10, 5))
+    bars = plt.bar([f"B{i+1}" for i in range(len(result['scores']))], result['scores'])
+    plt.axhline(result["max"], color='red', linestyle='--', label='Cmax')
+    plt.axhline(result["min"], color='green', linestyle='--', label='Cmin')
+    plt.title("Складність кожного білета")
+    plt.xlabel("Білети")
+    plt.ylabel("Сумарна складність")
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.4)
+    plt.tight_layout()
+    plt.show()

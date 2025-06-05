@@ -3,23 +3,21 @@ import csv
 def read_task_from_csv(filepath="data/tasks.csv"):
     """
     Зчитує задачу з CSV-файлу. Формат:
-    - перший рядок: N,ni
-    - далі N рядків, по ni чисел (складності)
+    - перший рядок: N — кількість тем
+    - далі N рядків, кожен — список складностей питань для теми
     """
     with open(filepath, newline='') as csvfile:
         reader = csv.reader(csvfile)
         first_row = next(reader)
-        N = int(first_row[0])
-        ni = int(first_row[1])
+        N = int(first_row[0])  # Кількість тем
         data = []
 
-        for row in reader:
+        for _ in range(N):
+            row = next(reader)
             data.append([int(x) for x in row])
-
-        assert len(data) == N and all(len(row) == ni for row in data)
 
         return {
             "N": N,
-            "ni": ni,
+            "ni_list": [len(row) for row in data],  # Кількість питань на кожну тему
             "data": data
         }
