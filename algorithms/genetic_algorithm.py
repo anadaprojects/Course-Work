@@ -134,12 +134,7 @@ def mutate_alternative(tickets, data, mutation_rate):
     
     return tickets
 
-<<<<<<< HEAD
 def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2, patience=15, use_validation=True):
-=======
-def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2, crossover_prob=0.8, patience=15):
-
->>>>>>> ab85b82944ec088f828c27600200f365e2abe816
     data = task["data"]
     N = len(data)
     
@@ -204,15 +199,26 @@ def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2,
 
         # Створення нового покоління
         new_population = []
-        for _ in range(pop_size):
-            parent1 = copy.deepcopy(random.choice(evaluated[:5])[1])
-            parent2 = copy.deepcopy(random.choice(evaluated[:5])[1])
-            if random.random() < crossover_prob:
-             child = crossover(parent1, parent2)
-            else:
-              child = copy.deepcopy(parent1)
-
-            child = mutate(child, data, mutation_rate)
+        elite_size = max(1, pop_size // 10)  # 10% еліти
+        
+        # Зберігаємо найкращі рішення (елітизм)
+        for i in range(elite_size):
+            if evaluated[i][0][0] != float('inf'):
+                new_population.append(copy.deepcopy(evaluated[i][1]))
+        
+        # Генеруємо решту популяції
+        while len(new_population) < pop_size:
+            # Турнірна селекція
+            tournament_size = 3
+            parents = random.sample(evaluated[:pop_size//2], tournament_size)
+            parent1 = min(parents, key=lambda x: x[0][0])[1]
+            
+            parents = random.sample(evaluated[:pop_size//2], tournament_size)
+            parent2 = min(parents, key=lambda x: x[0][0])[1]
+            
+            # Схрещування та мутація
+            child = crossover(copy.deepcopy(parent1), copy.deepcopy(parent2))
+            child = mutate_alternative(child, data, mutation_rate)
             new_population.append(child)
         
         population = new_population
@@ -270,4 +276,3 @@ def display_genetic_result(result):
     plt.grid(True, linestyle='--', alpha=0.4)
     plt.tight_layout()
     plt.show()
-
