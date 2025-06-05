@@ -32,11 +32,13 @@ def mutate(tickets, data, mutation_rate):
     N = len(data)
     for ticket in tickets:
         if random.random() < mutation_rate:
-            i = random.randint(0, N - 1)
-            if len(data[i]) > 1:
-                new_k = random.randint(0, len(data[i]) - 1)
-                ticket[i] = (i, new_k, data[i][new_k])
+            index = random.randint(0, len(ticket) - 1)
+            topic_idx = ticket[index][0]
+            if len(data[topic_idx]) > 1:
+                new_k = random.randint(0, len(data[topic_idx]) - 1)
+                ticket[index] = (topic_idx, new_k, data[topic_idx][new_k])
     return tickets
+
 
 def genetic_algorithm(task, pop_size=20, max_generations=100, mutation_rate=0.2, patience=15):
     data = task["data"]
