@@ -8,7 +8,8 @@ from algorithms.greedy_algorithm import greedy_algorithm, print_greedy_result, p
 from utils.experiments_runner import (
     run_experiment_iterations,
     run_experiment_population,
-    run_experiment_task_size
+    run_experiment_task_size,
+    run_experiment_pi_log
 )
 
 def print_menu():
@@ -18,6 +19,7 @@ def print_menu():
     print("3 – Експеримент 1: вплив параметра K (ітерації без покращення)")
     print("4 – Експеримент 2: вплив розміру популяції (P)")
     print("5 – Експеримент 3: вплив кількості білетів (n)")
+    print("6 – Експеримент 4: вплив параметра π (логарифмічна залежність)")
     print("0 – Вийти")
 
 
@@ -95,10 +97,12 @@ def main():
             run_experiment_iterations()
 
         elif choice == "4":
-            run_experiment_population()
+             run_experiment_population()
 
         elif choice == "5":
             run_experiment_task_size()
+        elif choice == "6":
+            run_experiment_pi_log()
 
         elif choice == "0":
             print("Завершення роботи програми.")
